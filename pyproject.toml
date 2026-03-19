@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "v2rayu-updater"
+version = "1.0.0"
+description = "External V2RayU subscription updater for macOS plist storage."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Oleg Go" }]
+dependencies = ["bpylist2>=4.1.1", "requests>=2.31.0"]
+
+[project.scripts]
+v2rayu-updater = "v2rayu_updater.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
