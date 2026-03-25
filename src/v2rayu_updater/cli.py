@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+import json
 from pathlib import Path
 from typing import Sequence
 
@@ -42,6 +43,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--apply",
         action="store_true",
         help="Apply updates and write plist.",
+    )
+    mode.add_argument(
+        "-e",
+        "--entries",
+        action="store_true",
+        help="Dump config.* server entries from plist as JSON.",
     )
     parser.add_argument(
         "-f",
@@ -100,6 +107,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.list_subscriptions:
         print_subscription_report(plist_path, subscriptions)
+        return 0
+
+    if args.entries:
+        print_entries_json(configs)
         return 0
 
     if args.dry_run or args.apply:
@@ -201,6 +212,43 @@ def print_subscription_report(plist_path: Path, subscriptions: list) -> None:
         print(f"   decode: {item.decode_method}")
         if item.error:
             print(f"   error: {item.error}")
+
+
+def print_entries_json(configs: list) -> None:
+    payload = build_entries_dump(configs)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+
+
+def build_entries_dump(configs: list) -> list[dict]:
+    entries: list[dict] = []
+    for item in configs:
+        parsed_json = None
+        json_parse_error = None
+        if item.json is not None:
+            try:
+                loaded = json.loads(item.json)
+            except Exception as exc:  # noqa: BLE001
+                json_parse_error = str(exc)
+            else:
+                parsed_json = loaded
+
+        entries.append(
+            {
+                "key": item.key,
+                "name": item.name,
+                "remark": item.remark,
+                "subscribe": item.subscribe,
+                "url": item.url,
+                "is_valid": item.is_valid,
+                "speed": item.speed,
+                "decode_method": item.decode_method,
+                "error": item.error,
+                "json_raw": item.json,
+                "json": parsed_json,
+                "json_parse_error": json_parse_error,
+            }
+        )
+    return entries
 
 
 def print_dry_run_report(
@@ -360,4 +408,7 @@ def _shorten(value: str | None, limit: int = 120) -> str:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except BrokenPipeError:
+        raise SystemExit(0)

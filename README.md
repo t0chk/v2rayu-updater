@@ -33,6 +33,12 @@ v2rayu-updater -l                 # --list-subscriptions
 v2rayu-updater -d                 # --dry-run
 v2rayu-updater -a                 # --apply
 v2rayu-updater -a -f              # --apply --force
+v2rayu-updater -e                 # --entries (dump config.* as JSON)
+```
+
+Entries dump example:
+```bash
+v2rayu-updater -e > entries.json
 ```
 
 ### Dry-run options
